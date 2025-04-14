@@ -15,6 +15,10 @@ cov_html/
 notes.txt
 **/__pycache__/*
 venv
+.env
+.venv/
+env/
+venv/
 admin_password
 results
 *.prof
