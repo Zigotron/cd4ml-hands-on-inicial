@@ -21,7 +21,7 @@ def get_validation_plot(true_value, prediction):
     plot.yaxis.axis_label_text_font_size = '14pt'
     plot.yaxis.major_label_text_font_size = '12pt'
 
-    plot.circle(true_value, prediction)
+    plot.circle(true_value, prediction, radius=6)
 
     plot.line(x_range, y_range, line_dash='dashed', color='gray')
 
