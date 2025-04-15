@@ -30,7 +30,22 @@ def register_model(model_id, host_name, did_pass_acceptance_test):
     file_names = get_model_files(model_id)
     specification = get_json(file_names['model_specification'])
 
-    mlflow.set_experiment(specification['problem_name'])
+    experiment_name = specification['problem_name']
+    mlflow.set_experiment(experiment_name)
+
+    client = mlflow.tracking.MlflowClient()
+    experiment = client.get_experiment_by_name(experiment_name)
+
+    # Verifica se já existe um run com o mesmo model_id como run_name
+    existing_runs = client.search_runs(
+        experiment_ids=[experiment.experiment_id],
+        filter_string=f"tag.mlflow.runName = '{model_id}'",
+        max_results=1
+    )
+
+    if existing_runs:
+        logger.warning(f"Run with name {model_id} already exists. Skipping registration.")
+        return
 
     with mlflow.start_run(run_name=model_id):
         log_param("ProblemName", specification['problem_name'])
