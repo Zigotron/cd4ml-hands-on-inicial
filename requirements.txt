@@ -1,9 +1,9 @@
 numpy
 pandas
-scikit-learn
+scikit-learn==1.0.2
 flask
 mlflow
-joblib
+joblib==1.1.0
 lime
 fluent-logger
 bokeh
@@ -21,3 +21,4 @@ snakeviz
 pytest
 pytest-cov
 coverage
+bokeh_sampledata
