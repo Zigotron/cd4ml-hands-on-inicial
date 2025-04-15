@@ -1,4 +1,5 @@
 version: "3.7"
+
 services:
   welcome:
     container_name: welcome_server
@@ -18,11 +19,11 @@ services:
     ports:
       - "10000:8080"
     environment:
-        FLUENTD_HOST: fluentd
-        FLUENTD_PORT: 24224
-        TENANT: "jenkins"
-        ACCESS_KEY: ${ACCESS_KEY}
-        SECRET_KEY: ${SECRET_KEY}
+      FLUENTD_HOST: fluentd
+      FLUENTD_PORT: 24224
+      TENANT: "jenkins"
+      ACCESS_KEY: ${ACCESS_KEY}
+      SECRET_KEY: ${SECRET_KEY}
     volumes:
       - jenkins_home:/var/jenkins_home
     secrets:
@@ -56,7 +57,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    depends_on: 
+    depends_on:
       - jenkins
 
   kib01:
@@ -69,9 +70,8 @@ services:
       ELASTICSEARCH_HOSTS: http://es01:9200
     networks:
       - jenkins_nw
-    depends_on: 
+    depends_on:
       - es01
-      
 
   fluentd:
     image: ericnaglertw/cd4ml-fluentd:1
@@ -82,7 +82,7 @@ services:
       - "24224:24224"
     networks:
       - jenkins_nw
-    depends_on: 
+    depends_on:
       - es01
 
   model:
@@ -100,7 +100,7 @@ services:
       SECRET_KEY: ${SECRET_KEY}
     networks:
       - jenkins_nw
-    depends_on: 
+    depends_on:
       - fluentd
       - minio
 
@@ -124,6 +124,21 @@ services:
     networks:
       - jenkins_nw
 
+  postgres:
+    image: postgres:13
+    container_name: mlflow_postgres
+    environment:
+      POSTGRES_USER: mlflow
+      POSTGRES_PASSWORD: mlflow
+      POSTGRES_DB: mlflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"  # expõe para acesso externo
+    networks:
+      - jenkins_nw
+
+
   mlflow:
     container_name: mlflow
     build:
@@ -141,7 +156,8 @@ services:
       - mlflow-storage:/mnt/mlflow
     depends_on:
       - minio
-  
+      - postgres
+
   dev:
     container_name: dev
     image: jupyter/minimal-notebook:54462805efcb
@@ -156,7 +172,7 @@ services:
       - .:/home/jovyan/
     networks:
       - jenkins_nw
-    depends_on: 
+    depends_on:
       - jenkins
 
 volumes:
@@ -167,6 +183,8 @@ volumes:
   minio-storage:
     driver: local
   mlflow-storage:
+    driver: local
+  postgres_data:
     driver: local
 
 networks:
