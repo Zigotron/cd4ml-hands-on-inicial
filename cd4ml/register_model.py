@@ -20,7 +20,6 @@ def log_ml_pipeline_params_file(file_path):
         for key, val in json_content.items():
             log_param(key, val)
 
-
 def register_model(model_id, host_name, did_pass_acceptance_test):
     logger = logging.getLogger(__name__)
     mlflow.set_tracking_uri(uri=host_name)
@@ -36,7 +35,7 @@ def register_model(model_id, host_name, did_pass_acceptance_test):
     client = mlflow.tracking.MlflowClient()
     experiment = client.get_experiment_by_name(experiment_name)
 
-    # Verifica se já existe um run com o mesmo model_id como run_name
+    # Verifica se já existe um run com esse nome
     existing_runs = client.search_runs(
         experiment_ids=[experiment.experiment_id],
         filter_string=f"tag.mlflow.runName = '{model_id}'",
@@ -44,10 +43,17 @@ def register_model(model_id, host_name, did_pass_acceptance_test):
     )
 
     if existing_runs:
-        logger.warning(f"Run with name {model_id} already exists. Skipping registration.")
-        return
+        run = existing_runs[0]
+        run_id = run.info.run_id
+        logger.warning(f"Run with name {model_id} already exists. Logging into existing run.")
+    else:
+        run_id = None
 
-    with mlflow.start_run(run_name=model_id):
+    with mlflow.start_run(run_id=run_id, run_name=None if run_id else model_id):
+        # Apenas loga a tag se for um novo run
+        if not run_id:
+            set_tag("mlflow.runName", model_id)
+
         log_param("ProblemName", specification['problem_name'])
         log_param("MLPipelineParamsName", specification['ml_pipeline_params_name'])
         log_param("FeatureSetName", specification['feature_set_name'])
@@ -60,3 +66,5 @@ def register_model(model_id, host_name, did_pass_acceptance_test):
         log_model_metrics_file(file_names["model_metrics"])
         log_ml_pipeline_params_file(file_names["ml_pipeline_params"])
         log_artifacts(file_names['results_folder'])
+
+
